@@ -1,0 +1,330 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile document storing basic account preferences.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The unique Firebase Auth UID of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's primary email address."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "URL to the user's profile avatar."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of profile creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last update."
+        }
+      },
+      "required": ["userId", "email"]
+    },
+    "Contact": {
+      "title": "Contact",
+      "description": "A contact stored in the universal hub for multi-channel communication.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the contact."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the contact owner."
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Full name of the contact."
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Phone number for GSM call, SMS, WhatsApp."
+        },
+        "fbUsername": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Facebook username or Messenger ID."
+        },
+        "telegramUsername": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Telegram handle without @."
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Email address of the contact."
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Category such as Personal, Work, Business, VIP, Family."
+        },
+        "organization": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Company, organization, or hotel affiliation."
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Additional notes about the contact."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp when the contact was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp when contact was last updated."
+        }
+      },
+      "required": ["ownerId", "name", "phone"]
+    },
+    "InteractionLog": {
+      "title": "InteractionLog",
+      "description": "Log of an interaction (call, WhatsApp message, SMS, Messenger dispatch) initiated with a contact.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the log entry."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user."
+        },
+        "contactId": {
+          "type": "string",
+          "description": "Associated contact ID if applicable."
+        },
+        "contactName": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Name of the contacted person."
+        },
+        "channel": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Channel used: whatsapp, messenger, telegram, call, sms, email."
+        },
+        "messageSummary": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Snippet or summary of the message sent or call note."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO timestamp of the interaction."
+        }
+      },
+      "required": ["ownerId", "channel", "contactName"]
+    },
+    "SyncPacket": {
+      "title": "SyncPacket",
+      "description": "Remote device notification sync or simulated mobile listener packet.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the packet."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the owner."
+        },
+        "deviceId": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Identifier of the transmitting Android/Bridge device."
+        },
+        "appName": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Originating app (WhatsApp, Messenger, SMS, Telecom)."
+        },
+        "sender": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Sender identifier or title."
+        },
+        "content": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Notification message text or payload."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO timestamp of synchronization."
+        }
+      },
+      "required": ["ownerId", "deviceId", "appName", "sender"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Financial transaction, gateway record, or customer invoice.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the payment record."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user."
+        },
+        "contactId": {
+          "type": "string",
+          "description": "Associated contact ID if applicable."
+        },
+        "contactName": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Customer or contact name."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Payment amount."
+        },
+        "currency": {
+          "type": "string",
+          "maxLength": 10,
+          "description": "Currency code (BDT, USD, EUR, GBP)."
+        },
+        "gateway": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Gateway used (sslcommerz, stripe, bkash_direct, cash)."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Specific method (bKash, Nagad, Rocket, Visa/Mastercard, Bank)."
+        },
+        "status": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Payment status (completed, pending, failed, refunded)."
+        },
+        "transactionRef": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Unique transaction or gateway reference number."
+        },
+        "purpose": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Purpose of payment (Hotel booking, consulting, invoice)."
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Additional memos or notes."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp when payment was recorded."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last update."
+        }
+      },
+      "required": ["ownerId", "contactName", "amount", "currency", "status"]
+    },
+    "CustomModule": {
+      "title": "CustomModule",
+      "description": "Dynamic self-evolving UI modules and macros generated by AI.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the dynamic module."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the creator."
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Display title of the module."
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Summary of module functionality."
+        },
+        "code": {
+          "type": "string",
+          "maxLength": 5000,
+          "description": "Executable JavaScript/JSX component code."
+        },
+        "icon": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Icon identifier."
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Category (Hotel, Productivity, Finance, Dispatcher)."
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the module is active."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO last update timestamp."
+        }
+      },
+      "required": ["ownerId", "title", "code"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile and settings documents."
+    },
+    "/users/{userId}/contacts/{contactId}": {
+      "schema": { "$ref": "#/entities/Contact" },
+      "description": "Contacts created and managed by the user."
+    },
+    "/users/{userId}/logs/{logId}": {
+      "schema": { "$ref": "#/entities/InteractionLog" },
+      "description": "Interaction logs for multi-channel dispatches."
+    },
+    "/users/{userId}/syncPackets/{packetId}": {
+      "schema": { "$ref": "#/entities/SyncPacket" },
+      "description": "Synced notification packets and remote listener events."
+    },
+    "/users/{userId}/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/Payment" },
+      "description": "Financial transactions, invoices, and gateway payments."
+    },
+    "/users/{userId}/customModules/{moduleId}": {
+      "schema": { "$ref": "#/entities/CustomModule" },
+      "description": "Autonomous custom modules and dynamic widgets."
+    }
+  }
+}

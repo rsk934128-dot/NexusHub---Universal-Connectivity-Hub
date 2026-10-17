@@ -1,0 +1,133 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.userId == userId
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 120
+        && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100))
+        && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500));
+    }
+
+    function isValidContact(data, userId) {
+      return data.ownerId == userId
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.phone is string && data.phone.size() > 0 && data.phone.size() <= 30
+        && (!('fbUsername' in data) || (data.fbUsername is string && data.fbUsername.size() <= 80))
+        && (!('telegramUsername' in data) || (data.telegramUsername is string && data.telegramUsername.size() <= 80))
+        && (!('email' in data) || (data.email is string && data.email.size() <= 120))
+        && (!('category' in data) || (data.category is string && data.category.size() <= 40))
+        && (!('organization' in data) || (data.organization is string && data.organization.size() <= 100))
+        && (!('notes' in data) || (data.notes is string && data.notes.size() <= 500));
+    }
+
+    function isValidInteractionLog(data, userId) {
+      return data.ownerId == userId
+        && data.contactName is string && data.contactName.size() > 0 && data.contactName.size() <= 100
+        && data.channel is string && data.channel.size() > 0 && data.channel.size() <= 30
+        && (!('messageSummary' in data) || (data.messageSummary is string && data.messageSummary.size() <= 500))
+        && (!('contactId' in data) || (data.contactId is string && data.contactId.size() <= 128));
+    }
+
+    function isValidSyncPacket(data, userId) {
+      return data.ownerId == userId
+        && data.deviceId is string && data.deviceId.size() > 0 && data.deviceId.size() <= 80
+        && data.appName is string && data.appName.size() > 0 && data.appName.size() <= 60
+        && data.sender is string && data.sender.size() > 0 && data.sender.size() <= 100
+        && (!('content' in data) || (data.content is string && data.content.size() <= 1000));
+    }
+
+    function isValidPayment(data, userId) {
+      return data.ownerId == userId
+        && data.contactName is string && data.contactName.size() > 0 && data.contactName.size() <= 100
+        && data.amount is number && data.amount >= 0
+        && data.currency is string && data.currency.size() > 0 && data.currency.size() <= 10
+        && data.status is string && data.status.size() > 0 && data.status.size() <= 30
+        && (!('contactId' in data) || (data.contactId is string && data.contactId.size() <= 128))
+        && (!('gateway' in data) || (data.gateway is string && data.gateway.size() <= 30))
+        && (!('paymentMethod' in data) || (data.paymentMethod is string && data.paymentMethod.size() <= 50))
+        && (!('transactionRef' in data) || (data.transactionRef is string && data.transactionRef.size() <= 100))
+        && (!('purpose' in data) || (data.purpose is string && data.purpose.size() <= 200))
+        && (!('notes' in data) || (data.notes is string && data.notes.size() <= 500));
+    }
+
+    function isValidCustomModule(data, userId) {
+      return data.ownerId == userId
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 100
+        && data.code is string && data.code.size() > 0 && data.code.size() <= 5000
+        && (!('description' in data) || (data.description is string && data.description.size() <= 300))
+        && (!('icon' in data) || (data.icon is string && data.icon.size() <= 40))
+        && (!('category' in data) || (data.category is string && data.category.size() <= 40))
+        && (!('enabled' in data) || data.enabled is bool);
+    }
+
+    // User Profile Documents
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(request.resource.data, userId);
+      allow update: if isOwner(userId) && isValidUserProfile(request.resource.data, userId)
+        && request.resource.data.userId == resource.data.userId;
+      allow delete: if isOwner(userId);
+
+      // User Contacts Subcollection
+      match /contacts/{contactId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(contactId) && isValidContact(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidId(contactId) && isValidContact(request.resource.data, userId)
+          && request.resource.data.ownerId == resource.data.ownerId;
+        allow delete: if isOwner(userId) && isValidId(contactId);
+      }
+
+      // Interaction Logs Subcollection
+      match /logs/{logId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(logId) && isValidInteractionLog(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidId(logId) && isValidInteractionLog(request.resource.data, userId);
+        allow delete: if isOwner(userId) && isValidId(logId);
+      }
+
+      // Device Sync Packets Subcollection
+      match /syncPackets/{packetId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(packetId) && isValidSyncPacket(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidId(packetId) && isValidSyncPacket(request.resource.data, userId);
+        allow delete: if isOwner(userId) && isValidId(packetId);
+      }
+
+      // Financial Payments & Transactions Subcollection
+      match /payments/{paymentId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(paymentId) && isValidPayment(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidId(paymentId) && isValidPayment(request.resource.data, userId)
+          && request.resource.data.ownerId == resource.data.ownerId;
+        allow delete: if isOwner(userId) && isValidId(paymentId);
+      }
+
+      // Autonomous Custom Modules Subcollection
+      match /customModules/{moduleId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(moduleId) && isValidCustomModule(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidId(moduleId) && isValidCustomModule(request.resource.data, userId)
+          && request.resource.data.ownerId == resource.data.ownerId;
+        allow delete: if isOwner(userId) && isValidId(moduleId);
+      }
+    }
+  }
+}
